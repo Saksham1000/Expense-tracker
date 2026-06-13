@@ -233,3 +233,65 @@ Submit: GitHub repo URL · updated Postman collection · updated README
 Commit quality · bug-fix correctness (no regressions) · feature design ·
 Postman completeness · code readability · REST conventions (status codes,
 response shape).
+
+## My Features
+
+- **Authentication:** Token and session auth enabled. Endpoints require an
+  authenticated user; `Category` and `Expense` are scoped to their `owner`.
+  - API: `POST /api/token-auth/` returns `{"token": "..."}`. Use header
+   `Authorization: Token <token>`.
+
+- **Currency conversion (required):** `Expense` has a `currency` field.
+  The `GET /api/expenses/summary/` endpoint converts per-category totals to
+  `BASE_CURRENCY` (set in `.env`) using `exchangerate.host` and returns a
+  structured JSON with `base_currency`, `as_of`, and per-category `total` and
+  `breakdown` entries.
+
+- **Budget threshold bot alerts (required):** `Category` includes
+  `monthly_limit`. Creating or updating an `Expense` will compute the
+  month-to-date total (converted to `BASE_CURRENCY`) and, if the limit is
+  crossed, send a Telegram alert using `BOT_TOKEN` and `BOT_CHAT_ID` from
+  `.env`. If these are not set, alerts are skipped harmlessly.
+
+- **Optional features:** CSV export (`GET /api/expenses/export/`) and
+  monthly summary (`GET /api/expenses/monthly/?year=YYYY&month=M`).
+
+## Bugs Found and Fixed
+
+1. Serializer typo: `ExpenseSerializer` referenced `catgory` and returned
+  wrong fields. Fixed fields to include `category`, `currency`, and `owner`.
+2. Date filter logic: `start_date` used `date__gt` making it exclusive.
+  Changed to `date__gte` for inclusive filtering.
+3. Response typo: views returned `serialzer` in one place. Fixed to return
+  `serializer`.
+4. Missing imports/aggregation: `Sum` was referenced but not imported; fixed
+  and implemented proper summary aggregation.
+5. URL ordering: `expenses/<pk>/` matched `summary`; moved `summary` route
+  before the detail route.
+
+For each fix see commits in the repository history (branch names follow the
+required convention). Add screenshots of bot alerts to this README after you
+configure `BOT_TOKEN`/`BOT_CHAT_ID` and run an expense that crosses a limit.
+
+## Running locally (quick)
+
+1. Copy `.env.example` to `.env` and set `SECRET_KEY`. Optionally set
+  `BASE_CURRENCY`, `BOT_TOKEN`, `BOT_CHAT_ID`.
+
+2. Install and run:
+
+```powershell
+cd django-intern-project
+uv sync
+uv run python manage.py migrate
+uv run python manage.py runserver
+```
+
+3. Import `postman_collection.json` and use the `Obtain Token` request to
+  authenticate. Use the token header for subsequent requests.
+
+## Postman
+
+`postman_collection.json` updated with new endpoints: `token-auth`,
+`expenses/export`, and `expenses/monthly`.
+
