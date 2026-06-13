@@ -1,4 +1,4 @@
-# Expense Tracker API — Intern Screening
+# Expense Tracker 
 
 A small Django REST Framework backend for tracking personal spending
 (categories, expenses, date filtering, and a per-category summary).
